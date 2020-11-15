@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import Particles from 'react-particles-js';
-import Clarifai from 'clarifai';
 
 import './App.css';
 
@@ -11,10 +10,6 @@ import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import FaceRecognition from './components/FaceRecognition/FaceRecognition';
 import SignIn from './components/SignIn/SignIn';
 import Register from './components/Register/Register';
-
-const app = new Clarifai.App({
-	apiKey: '2afd7870a1534f04ac114fb047c7aac6',
-});
 
 const particlesOptions = {
 	particles: {
@@ -28,24 +23,26 @@ const particlesOptions = {
 	},
 };
 
+const initialState = {
+	input: '',
+	imageUrl: '',
+	box: {},
+	route: 'signIn',
+	isSignedIn: false,
+	user: {
+		id: '',
+		name: '',
+		email: '',
+		password: '',
+		entries: 0,
+		joined: '',
+	},
+};
+
 class App extends Component {
 	constructor() {
 		super();
-		this.state = {
-			input: '',
-			imageUrl: '',
-			box: {},
-			route: 'signIn',
-			isSignedIn: false,
-			user: {
-				id: '',
-				name: '',
-				email: '',
-				password: '',
-				entries: 0,
-				joined: '',
-			},
-		};
+		this.state = initialState;
 	}
 
 	loadUser = data => {
@@ -86,15 +83,17 @@ class App extends Component {
 
 	onButtonSubmit = () => {
 		this.setState({ imageUrl: this.state.input });
-		app.models
-			.predict(
-				'c0c0ac362b03416da06ab3fa36fb58e3',
-				// THE JPG
-				this.state.input
-			)
+		fetch('https://cryptic-wildwood-86751.herokuapp.com/imageurl', {
+			method: 'post',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				input: this.state.input,
+			}),
+		})
+			.then(response => response.json())
 			.then(response => {
 				if (response) {
-					fetch('http://localhost:3000/image', {
+					fetch('https://cryptic-wildwood-86751.herokuapp.com/image', {
 						method: 'put',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
@@ -104,7 +103,8 @@ class App extends Component {
 						.then(response => response.json())
 						.then(count => {
 							this.setState(Object.assign(this.state.user, { entries: count }));
-						});
+						})
+						.catch(console.log);
 				}
 				this.displayFaceBox(this.calculateFaceLocation(response));
 			})
@@ -115,7 +115,7 @@ class App extends Component {
 
 	onRouteChange = route => {
 		if (route === 'signOut') {
-			this.setState({ isSignedIn: false });
+			this.setState({ initialState });
 		} else if (route === 'home') {
 			this.setState({ isSignedIn: true });
 		}

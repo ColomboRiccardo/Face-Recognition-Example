@@ -14,7 +14,7 @@ import Register from './components/Register/Register';
 const particlesOptions = {
 	particles: {
 		number: {
-			value: 50,
+			value: 51,
 			density: {
 				enable: true,
 				value_area: 1000,
